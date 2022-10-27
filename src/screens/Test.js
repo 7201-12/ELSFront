@@ -16,6 +16,9 @@ const Test = () => {
     const [minutes, setMinutes] = useState('00');
     const [seconds, setSeconds] = useState('00');
     const [it, setIt] = useState(0);
+    const [url, setUrl] = useState('');
+    const [result, setResult] = useState('');
+    const [timeup, setTimeup] = useState(false);
     const navigate = useNavigate();
 
     const refreshTimer = () => {
@@ -36,6 +39,7 @@ const Test = () => {
             } else {
                 setMinutes('00');
                 setSeconds('00');
+                setTimeup(true);
             }
         }
     }
@@ -49,18 +53,26 @@ const Test = () => {
         const path = window.location.pathname;
         switch (path) {
             case "/test/chlpol":
+                setUrl('/fulltegrity');
+                setResult('result_chl_pol');
                 return "на целостность и полноту знаний"
             case "/test/umn":
+                setUrl('/problems');
+                setResult('result_umn');
                 return "на умения"
         }
         return ""
     }
+    useEffect(() => {
+        setT(returnType());
+    }, [])
 
     useEffect( () => {
-        setT(returnType());
-        refreshTimer();
-        getArray("/fulltegrity", setQuestions);
-    }, []);
+        if (t !== '') {
+            refreshTimer();
+            getArray(url, setQuestions);
+        }
+    }, [t]);
 
     useEffect(() => {
         if(questions.length > 0) {
@@ -106,7 +118,7 @@ const Test = () => {
 
         const Item = (index, key) => {
             return (
-            <div key={key} className={itemStyle}
+            <div key={key} className={question === index ? choosedItemStyle : itemStyle}
                         onClick={() => handleItemClick(index)}>
                 {index+1}
             </div>
@@ -130,7 +142,7 @@ const Test = () => {
         const Item = (index) => {
             const val = vars[index].value;
             return (
-                <FormControlLabel key={index} value={vars[index].id} control={<Radio />} label={val} />
+                <FormControlLabel className="text-left" key={index} value={vars[index].id} control={<Radio />} label={val} />
             );
         }
 
@@ -149,18 +161,20 @@ const Test = () => {
             <div className="bg-white  sm:p-6 shadow">
                 <h1 className="text-xl font-bold">Вопрос №{question+1}</h1>
                 <div className="flex flex-row mt-5">
-                    <div className="px-4 py-5 bg-gray-200 text-left basis-4/6">Содержание: {questions[question].value}</div>
-                    <FormControl>
-                        <FormLabel id="demo-radio-buttons-group-label">Варианты ответа:</FormLabel>
-                        <RadioGroup
-                            aria-labelledby="demo-radio-buttons-group-label"
-                            value={answers[question]}
-                            onChange={(e) => handleChoose(e)}
-                            name="variants"
-                        >
-                            {vars.map((val, index)=>Item(index))}
-                        </RadioGroup>
-                    </FormControl>
+                    <div className="px-4 py-5 bg-gray-200 text-left basis-3/6">Содержание: {questions[question].value}</div>
+                    <div className="pl-4">
+                        <FormControl>
+                            <FormLabel id="demo-radio-buttons-group-label">Варианты ответа:</FormLabel>
+                            <RadioGroup
+                                aria-labelledby="demo-radio-buttons-group-label"
+                                value={answers[question]}
+                                onChange={(e) => handleChoose(e)}
+                                name="variants"
+                            >
+                                {vars.map((val, index)=>Item(index))}
+                            </RadioGroup>
+                        </FormControl>
+                    </div>
                 </div>
             </div>
         );
@@ -182,7 +196,7 @@ const Test = () => {
         let request = [];
         for(let i = 0; i < answers.length; i++) {
             const ans = {
-                questionId: questions[question].id,
+                questionId: questions[i].id,
                 answerId: answers[i]
             }
             console.log("answer["+i+"]=", ans);
@@ -194,7 +208,7 @@ const Test = () => {
         await axios.post("/calculate", request, {})
             .then(response => {
                 console.log(response);
-                localStorage.setItem('result', response.data);
+                localStorage.setItem(result, response.data);
                 navigate("/test/result");
             })
             .catch(function (err) {
@@ -202,31 +216,47 @@ const Test = () => {
             });
     }
 
+    useEffect(() => {
+        if(timeup) {
+            submitTest();
+        }
+    }, [timeup]);
+
+    const getBack = () => {
+        navigate("/");
+    }
+
     return(
         <>
         {isLoading ? (<LoadingScreen/>) : (
-        <section className="bg-gray-50">
-            <div className="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center">
-                <div className="mx-auto max-w-xl text-center">
-                    <h1 className="text-3xl font-extrabold sm:text-5xl">
-                        Тест {t}
-                    </h1>
-                    <h2 className="text-xl font-bold">Осталось: {minutes}:{seconds}</h2>
-                    {QuestionsPanel()}
-                    {QuestionPanel()}
-                    <div className="flex flex-row rounded-md bg-gray-100">
-                        <ArrowLeftIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={choosePrev}/>
-                        <ArrowRightIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={chooseNext}/>
-                        <button onClick={submitTest} className="bg-slate-400 hover:bg-slate-500">Завершить тест</button>
+            <>
+            <div className="bg-gray-50">
+                <ArrowLeftIcon className="max-h-8 max-w-8 cursor-pointer hover:bg-gray-200" onClick={getBack}/>
+            </div>
+            <section className="bg-gray-50">
+                <div className="mx-auto max-w-screen-xl px-4 py-24 lg:flex lg:h-screen lg:items-center">
+                    <div className="mx-auto max-w-6xl text-center">
+                        <h1 className="text-3xl font-extrabold sm:text-5xl">
+                            Тест {t}
+                        </h1>
+                        <h2 className="text-xl font-bold">Осталось: {minutes}:{seconds}</h2>
+                        {QuestionsPanel()}
+                        {QuestionPanel()}
+                        <div className="flex flex-row rounded-md bg-gray-100">
+                            <ArrowLeftIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={choosePrev}/>
+                            <ArrowRightIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={chooseNext}/>
+                            <button onClick={submitTest} className="bg-slate-400 hover:bg-slate-500">Завершить тест</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>)}
+            </section>
+            </>)}
         </>
     );
 }
 
 const listStyle = "flex flex-row flex-wrap gap-2"
 const itemStyle = "bg-slate-400 rounded-md p-2 cursor-pointer hover:bg-slate-500 place-content-center max-h-12";
+const choosedItemStyle = "bg-slate-500 rounded-md p-2 cursor-pointer hover:bg-slate-600 place-content-center max-h-12"
 
 export default Test;
