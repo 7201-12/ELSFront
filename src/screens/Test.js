@@ -1,12 +1,46 @@
 import {useEffect, useState} from "react";
-import Timer from "../components/Timer";
 import getArray from "../components/getArray";
 import {FormControl, FormControlLabel, FormLabel, Radio, RadioGroup} from "@mui/material";
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/20/solid";
+import LoadingScreen from "../components/LoadingScreen";
+import axios from "../api/axios";
 
 const Test = () => {
-    const [time, setTime] = useState(9*60*1000);
     const [t, setT] = useState('');
+    const [targetDate, setTargetDate] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [questions, setQuestions] = useState([]);
+    const [question, setQuestion] = useState(0);
+    const [answers, setAnswers] = useState([]);
+    const [minutes, setMinutes] = useState('00');
+    const [seconds, setSeconds] = useState('00');
+
+    const refreshTimer = () => {
+        let target = parseInt(localStorage.getItem('target_date'));
+        if(target > 0) {
+            setTargetDate(target);
+        }
+    }
+
+    const countDownUntilZero = () => {
+        if(targetDate > 0) {
+            const currentDate = Date.now();
+            let secondsLeft = (targetDate - currentDate) / 1000;
+            if (secondsLeft > 0) {
+                secondsLeft = secondsLeft % 86400 % 3600;
+                setMinutes(pad(secondsLeft / 60));
+                setSeconds(pad(secondsLeft % 60));
+            } else {
+                setMinutes('00');
+                setSeconds('00');
+            }
+        }
+    }
+
+    function pad(n) {
+        n = Math.floor(n);
+        return (n < 10 ? '0' : '') + n;
+    }
 
     const returnType = () => {
         const path = window.location.pathname;
@@ -14,7 +48,6 @@ const Test = () => {
             case "/test/chlpol":
                 return "на целостность и полноту знаний"
             case "/test/umn":
-                setTime(15*60*1000);
                 return "на умения"
         }
         return ""
@@ -22,24 +55,24 @@ const Test = () => {
 
     useEffect( () => {
         setT(returnType());
+        refreshTimer();
+        getArray("/fulltegrity", setQuestions);
     }, []);
-
-    function refreshTimer() {
-        const targetDate = Date.now() + time;
-        localStorage.setItem('target_date', targetDate.toString());
-    }
-
-    const [questions, setQuestions] = useState([]);
-    const [question, setQuestion] = useState(0);
-    const [answers, setAnswers] = useState([]);
 
     useEffect(() => {
-        getArray("/questions", setQuestions);
-    }, []);
+        if(questions.length > 0 && targetDate > 0) {
+            setTimeout(countDownUntilZero, 1000);
+            setIsLoading(false);
+        }
+    }, [questions]);
+
+    useEffect(() => {
+        setTimeout(countDownUntilZero, 1000);
+    }, [seconds]);
 
     const QuestionsPanel = () => {
         const handleItemClick = (index) => {
-            setQuestion(questions[index]);
+            setQuestion(index);
         }
 
         const Item = (index, key) => {
@@ -63,29 +96,36 @@ const Test = () => {
     }
 
     const QuestionPanel = () => {
-
         const vars = questions[question].variants;
 
         const Item = (index) => {
             const val = vars[index].value;
             return (
-                <FormControlLabel value={val} control={<Radio />} label={val} />
+                <FormControlLabel key={index} value={vars[index].id} control={<Radio />} label={val} />
             );
         }
+
+        const handleChoose = (e) => {
+            setAnswers({
+                ...answers,
+                [question]: e.target.value,
+            });
+        };
 
         return (
             <div className="bg-white  sm:p-6 shadow">
                 <h1 className="text-xl font-bold">Вопрос №{question+1}</h1>
                 <div className="flex flex-row mt-5">
-                    <div className="px-4 py-5 bg-gray-200 text-left basis-4/6">Содержание:</div>
+                    <div className="px-4 py-5 bg-gray-200 text-left basis-4/6">Содержание: {questions[question].value}</div>
                     <FormControl>
                         <FormLabel id="demo-radio-buttons-group-label">Варианты ответа:</FormLabel>
                         <RadioGroup
                             aria-labelledby="demo-radio-buttons-group-label"
-                            defaultValue={vars[0]}
+                            value={answers[question]}
+                            onChange={(e) => handleChoose(e)}
                             name="variants"
                         >
-                            {vars.map((index)=>{Item(index)})}
+                            {vars.map((val, index)=>Item(index))}
                         </RadioGroup>
                     </FormControl>
                 </div>
@@ -105,28 +145,54 @@ const Test = () => {
         }
     }
 
+    async function submitTest() {
+        let request = [];
+        for(let i = 0; i < answers.length; i++) {
+            request[i] =  {
+                questionId: questions[question].id,
+                answerId: answers[i]
+            }
+        }
+
+        await axios.post("/calculate", request, {
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+        })
+            .then(response => {
+                console.log(response);
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
     return(
+        <>
+        {isLoading ? (<LoadingScreen/>) : (
         <section className="bg-gray-50">
             <div className="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center">
                 <div className="mx-auto max-w-xl text-center">
                     <h1 className="text-3xl font-extrabold sm:text-5xl">
                         Тест {t}
                     </h1>
-                    <h2 className="text-xl font-bold">Осталось: {Timer(time)}</h2>
+                    <h2 className="text-xl font-bold">Осталось: {minutes}:{seconds}</h2>
                     {QuestionsPanel()}
                     {QuestionPanel()}
-                    <div className="flex flex-row rounded-md bg-gray-150">
-                        <ArrowLeftIcon className="max-h-8" onClick={choosePrev}/>
-                        <ArrowRightIcon className="max-h-8" onClick={chooseNext}/>
+                    <div className="flex flex-row rounded-md bg-gray-100">
+                        <ArrowLeftIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={choosePrev}/>
+                        <ArrowRightIcon className="max-h-8 cursor-pointer hover:bg-gray-200" onClick={chooseNext}/>
+                        <button onClick={submitTest} className="bg-slate-400 hover:bg-slate-500">Завершить тест</button>
                     </div>
-                    <button onClick={refreshTimer}>refresh</button>
                 </div>
             </div>
-        </section>
+        </section>)}
+        </>
     );
 }
 
 const listStyle = "flex flex-row flex-wrap gap-2"
-const itemStyle = "bg-slate-500 rounded-md cursor-pointer hover:bg-slate-700 place-content-center max-h-12";
+const itemStyle = "bg-slate-400 rounded-md p-2 cursor-pointer hover:bg-slate-500 place-content-center max-h-12";
 
 export default Test;

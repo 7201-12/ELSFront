@@ -10,8 +10,7 @@ function App() {
                 <Route path="" element={<ChooseTest/>}/>
                 <Route path="test">
                     <Route path="" element={<ChooseTest/>}/>
-                    <Route path="chl" element={<Test/>}/>
-                    <Route path="pol" element={<Test/>}/>
+                    <Route path="chlpol" element={<Test/>}/>
                     <Route path="umn" element={<Test/>}/>
                 </Route>
             </Route>
