@@ -4,6 +4,7 @@ import {FormControl, FormControlLabel, FormLabel, Radio, RadioGroup} from "@mui/
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/20/solid";
 import LoadingScreen from "../components/LoadingScreen";
 import axios from "../api/axios";
+import {useNavigate} from "react-router-dom";
 
 const Test = () => {
     const [t, setT] = useState('');
@@ -14,6 +15,8 @@ const Test = () => {
     const [answers, setAnswers] = useState([]);
     const [minutes, setMinutes] = useState('00');
     const [seconds, setSeconds] = useState('00');
+    const [it, setIt] = useState(0);
+    const navigate = useNavigate();
 
     const refreshTimer = () => {
         let target = parseInt(localStorage.getItem('target_date'));
@@ -60,11 +63,37 @@ const Test = () => {
     }, []);
 
     useEffect(() => {
-        if(questions.length > 0 && targetDate > 0) {
+        if(questions.length > 0) {
+            if(it < questions.length) {
+                console.log("questions[it]=",questions[it]);
+                setAnswers([
+                    ...answers,
+                    questions[it].variants[0].id,
+                ]);
+                setIt(it + 1);
+            }
+        }
+    }, [questions]);
+
+    useEffect(() => {
+        if(questions.length > 0) {
+            if(it < questions.length) {
+                console.log("questions[it]=",questions[it]);
+                setAnswers([
+                    ...answers,
+                    questions[it].variants[0].id,
+                ]);
+                setIt(it + 1);
+            }
+        }
+    }, [it]);
+
+    useEffect(() => {
+        if(questions.length > 0 && targetDate > 0 && questions.length === answers.length) {
             setTimeout(countDownUntilZero, 1000);
             setIsLoading(false);
         }
-    }, [questions]);
+    }, [it]);
 
     useEffect(() => {
         setTimeout(countDownUntilZero, 1000);
@@ -106,10 +135,14 @@ const Test = () => {
         }
 
         const handleChoose = (e) => {
-            setAnswers({
-                ...answers,
-                [question]: e.target.value,
+            const nextAnswers = answers.map((a, i) => {
+                if (i === question) {
+                    return e.target.value;
+                } else {
+                    return a;
+                }
             });
+            setAnswers(nextAnswers);
         };
 
         return (
@@ -148,20 +181,21 @@ const Test = () => {
     async function submitTest() {
         let request = [];
         for(let i = 0; i < answers.length; i++) {
-            request[i] =  {
+            const ans = {
                 questionId: questions[question].id,
                 answerId: answers[i]
             }
+            console.log("answer["+i+"]=", ans);
+            request.push(ans);
         }
+        console.log("lastAnswers=",answers);
+        console.log(request);
 
-        await axios.post("/calculate", request, {
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-        })
+        await axios.post("/calculate", request, {})
             .then(response => {
                 console.log(response);
+                localStorage.setItem('result', response.data);
+                navigate("/test/result");
             })
             .catch(function (err) {
                 console.log(err);
