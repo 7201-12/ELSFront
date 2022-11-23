@@ -1,6 +1,6 @@
 {
   "name": "elsfront",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "private": false,
   "dependencies": {
     "@emotion/react": "^11.10.4",
@@ -10,8 +10,11 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@visx/network": "^2.10.0",
     "axios": "^1.1.3",
+    "chart.js": "^4.0.1",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.0.1",
     "react-dom": "^18.2.0",
     "react-loading": "^2.0.3",
     "react-router-dom": "^6.4.2",

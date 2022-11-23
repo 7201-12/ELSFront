@@ -4,7 +4,8 @@ import {FormControl, FormControlLabel, FormLabel, Radio, RadioGroup} from "@mui/
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/react/20/solid";
 import LoadingScreen from "../components/LoadingScreen";
 import axios from "../api/axios";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
+import GoBackButton from "../components/GoBackButton";
 
 const Test = () => {
     const [t, setT] = useState('');
@@ -20,6 +21,9 @@ const Test = () => {
     const [result, setResult] = useState('');
     const [timeup, setTimeup] = useState(false);
     const navigate = useNavigate();
+    const params = useParams();
+    const themeId = params.themeId;
+    const testId = params.testId;
 
     const refreshTimer = () => {
         let target = parseInt(localStorage.getItem('target_date'));
@@ -50,15 +54,15 @@ const Test = () => {
     }
 
     const returnType = () => {
-        const path = window.location.pathname;
-        switch (path) {
-            case "/test/chlpol":
-                setUrl('/fulltegrity');
-                setResult('result_chl_pol');
-                return "на целостность и полноту знаний"
-            case "/test/umn":
-                setUrl('/problems');
-                setResult('result_umn');
+        console.log(window.location.pathname)
+        setUrl(window.location.pathname)
+        setResult('result_'+themeId+'_'+testId);
+        switch (testId) {
+            case "1":
+                return "на полноту знаний"
+            case "2":
+                return "на целостность знаний"
+            case "3":
                 return "на умения"
         }
         return ""
@@ -209,7 +213,7 @@ const Test = () => {
             .then(response => {
                 console.log(response);
                 localStorage.setItem(result, response.data);
-                navigate("/test/result");
+                navigate("/test/"+themeId+"/result");
             })
             .catch(function (err) {
                 console.log(err);
@@ -222,18 +226,12 @@ const Test = () => {
         }
     }, [timeup]);
 
-    const getBack = () => {
-        navigate("/");
-    }
-
     return(
         <>
         {isLoading ? (<LoadingScreen/>) : (
             <>
-            <div className="bg-gray-50">
-                <ArrowLeftIcon className="max-h-8 max-w-8 cursor-pointer hover:bg-gray-200" onClick={getBack}/>
-            </div>
             <section className="bg-gray-50">
+                <GoBackButton/>
                 <div className="mx-auto max-w-screen-xl px-4 py-24 lg:flex lg:h-screen lg:items-center">
                     <div className="mx-auto max-w-6xl text-center">
                         <h1 className="text-3xl font-extrabold sm:text-5xl">
