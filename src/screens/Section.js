@@ -1,9 +1,37 @@
+import axios from "../api/axios";
+import {useEffect, useState} from "react";
+
 const Section = () => {
+    const [name, setName] = useState('');
+
+    async function getName() {
+        await axios.get('/start', {
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+        })
+            .then(response => {
+                if (response.data !== null) {
+                    setName(response.data);
+                }
+                console.log(response);
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    }
+
+    useEffect(() => {
+        getName()
+    })
+
     return (
         <section className="bg-gray-50">
             <div className="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center">
                 <div className="mx-auto max-w-xl text-center">
                     <h1 className="text-3xl font-extrabold sm:text-5xl">
+                        <p>Привет, {name}</p>
                         Выберите тест
                     </h1>
 

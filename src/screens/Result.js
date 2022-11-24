@@ -3,7 +3,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {Radar} from "react-chartjs-2";
 import GoBackButton from "../components/GoBackButton";
 import {Chart as ChartJS, Filler, Legend, LineElement, PointElement, RadialLinearScale, Tooltip} from "chart.js";
-import LoadingScreen from "../components/LoadingScreen";
+import RadarChart from "../components/RadarChart";
 
 const Result = () => {
     ChartJS.register(
@@ -50,9 +50,7 @@ const Result = () => {
                         <h1 className="text-3xl font-extrabold sm:text-5xl">
                             Результаты теста №{themeId}
                         </h1>
-                        <Radar
-                            data={data}
-                        />
+                        {RadarChart(resultPol, resultChl, resultUmn)}
                     </div>
                 </div>
             </section>
