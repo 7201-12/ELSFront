@@ -157,19 +157,19 @@ const IntMap = () => {
                     {/*<UncontrolledDiagram />*/}
                     <div className="flex flex-col">
                         <div className="flex flex-row">
-                            <div className="max-h-128">
+                            <div className={radarBoxStyle}>
                                 Результаты 1 теста
                                 <Radar
                                     data={results[0]}
                                 />
                             </div>
-                            <div className="max-h-128">
+                            <div className={radarBoxStyle}>
                                 Результаты 2 теста
                                 <Radar
                                     data={results[1]}
                                 />
                             </div>
-                            <div className="max-h-128">
+                            <div className={radarBoxStyle}>
                                 Результаты 3 теста
                                 <Radar
                                     data={results[2]}
@@ -177,7 +177,7 @@ const IntMap = () => {
                             </div>
                         </div>
                         <div className="flex flex-row">
-                            <div className="max-h-128">
+                            <div className={radarBoxStyle}>
                                 Результаты 1+2 теста
                                 <Radar
                                     data={results[3]}
@@ -185,7 +185,7 @@ const IntMap = () => {
                             </div>
                         </div>
                         <div className="flex flex-row">
-                            <div className="max-h-128">
+                            <div className={radarBoxStyle}>
                                 Итоговые результаты
                                 <Radar
                                     data={results[4]}
@@ -200,5 +200,7 @@ const IntMap = () => {
         </>
     )
 }
+
+const radarBoxStyle = "max-h-128 border-2 border-slate-800 rounded-sm"
 
 export default IntMap
