@@ -8,7 +8,7 @@ const RadarChart = (resultPol, resultChl, resultUmn) => {
                 datasets: [
                     {
                         label: 'баллы',
-                        data: [resultPol/(1.5*5), resultChl/(3*5), resultUmn/(9*5)],
+                        data: [resultPol/1.5, resultChl/3, resultUmn/9],
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1,

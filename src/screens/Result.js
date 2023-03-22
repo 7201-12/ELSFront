@@ -1,6 +1,5 @@
 import {useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {Radar} from "react-chartjs-2";
+import {useParams} from "react-router-dom";
 import GoBackButton from "../components/GoBackButton";
 import {Chart as ChartJS, Filler, Legend, LineElement, PointElement, RadialLinearScale, Tooltip} from "chart.js";
 import RadarChart from "../components/RadarChart";
@@ -25,19 +24,6 @@ const Result = () => {
         setResultChl(parseInt(localStorage.getItem('result_'+themeId+'_2')));
         setResultUmn(parseInt(localStorage.getItem('result_'+themeId+'_3')));
     },[]);
-
-    const data = {
-        labels: ['POL', 'CHL', 'UMN'],
-        datasets: [
-            {
-                label: 'баллы',
-                data: [resultPol, resultChl, resultUmn],
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-            },
-        ],
-    };
 
     return(
         <>
